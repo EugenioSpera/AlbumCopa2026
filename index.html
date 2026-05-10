@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Álbum Copa 2026</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,Segoe UI,Roboto;
+  background:#0f172a;
+  color:white;
+}
+
+header{
+  position:sticky;
+  top:0;
+  background:#111827;
+  padding:15px;
+  z-index:10;
+  box-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+
+h1{
+  margin:0 0 10px;
+  text-align:center;
+  font-size:24px;
+}
+
+.container{
+  max-width:700px;
+  margin:auto;
+  padding:15px;
+}
+
+.card{
+  background:#1e293b;
+  border-radius:16px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  margin-bottom:10px;
+  font-size:16px;
+}
+
+.progresso{
+  margin-top:10px;
+}
+
+.barra{
+  width:100%;
+  height:14px;
+  background:#334155;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.barra div{
+  height:100%;
+  background:#22c55e;
+  width:0%;
+}
+
+#percentual{
+  margin-top:8px;
+  text-align:center;
+  font-weight:bold;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.fig{
+  background:#1e293b;
+  border-radius:14px;
+  padding:10px;
+  text-align:center;
+  transition:.2s;
+  border:2px solid transparent;
+}
+
+.fig-num{
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.btns{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+button{
+  border:none;
+  border-radius:10px;
+  padding:8px;
+  font-size:12px;
+  font-weight:bold;
+  color:white;
+}
+
+.tem{
+  background:#16a34a;
+}
+
+.falta{
+  background:#dc2626;
+}
+
+.rep{
+  background:#facc15;
+  color:black;
+}
+
+.tem-box{
+  border-color:#22c55e;
+}
+
+.falta-box{
+  border-color:#ef4444;
+}
+
+.rep-box{
+  border-color:#facc15;
+}
+
+.share{
+  width:100%;
+  margin-top:15px;
+  padding:15px;
+  border:none;
+  border-radius:14px;
+  background:#22c55e;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+}
+
+.status{
+  margin-top:6px;
+  font-size:12px;
+}
+
+@media(max-width:500px){
+  .grid{
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 Álbum Copa 2026</h1>
+
+  <input id="nome" placeholder="Seu nome">
+  <input id="busca" placeholder="Buscar figurinha">
+
+  <div class="progresso">
+    <div class="barra">
+      <div id="barra"></div>
+    </div>
+    <div id="percentual">0%</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Legenda</h3>
+    <p>🟢 Tenho</p>
+    <p>🔴 Falta</p>
+    <p>🟡 Repetida / Troca</p>
+  </div>
+
+  <div id="album" class="grid"></div>
+
+  <button class="share" onclick="compartilhar()">
+    Compartilhar no WhatsApp
+  </button>
+
+</div>
+
+<script>
+
+// TOTAL DE FIGURINHAS
+// ALTERE SE NECESSÁRIO
+const TOTAL = 670;
+
+// CARREGA DADOS
+let dados = JSON.parse(localStorage.getItem('album2026')) || {};
+
+// SALVA NOME
+const nomeInput = document.getElementById('nome');
+nomeInput.value = localStorage.getItem('nomeAlbum') || '';
+
+nomeInput.addEventListener('input',()=>{
+  localStorage.setItem('nomeAlbum',nomeInput.value);
+});
+
+const album = document.getElementById('album');
+
+function criarAlbum(){
+
+  album.innerHTML='';
+
+  const busca = document.getElementById('busca').value.toLowerCase();
+
+  for(let i=1;i<=TOTAL;i++){
+
+    const numero = i.toString();
+
+    if(busca && !numero.includes(busca)){
+      continue;
+    }
+
+    const status = dados[numero] || 'falta';
+
+    const div = document.createElement('div');
+    div.className = 'fig ' + status + '-box';
+
+    let texto='';
+
+    if(status==='tem') texto='🟢 Tenho';
+    if(status==='falta') texto='🔴 Falta';
+    if(status==='rep') texto='🟡 Troca';
+
+    div.innerHTML = `
+      <div class="fig-num">#${numero}</div>
+
+      <div class="btns">
+        <button class="tem" onclick="setStatus('${numero}','tem')">
+          Tenho
+        </button>
+
+        <button class="falta" onclick="setStatus('${numero}','falta')">
+          Falta
+        </button>
+
+        <button class="rep" onclick="setStatus('${numero}','rep')">
+          Troca
+        </button>
+      </div>
+
+      <div class="status">${texto}</div>
+    `;
+
+    album.appendChild(div);
+  }
+
+  atualizarProgresso();
+}
+
+function setStatus(numero,status){
+
+  dados[numero] = status;
+
+  localStorage.setItem('album2026',JSON.stringify(dados));
+
+  criarAlbum();
+}
+
+function atualizarProgresso(){
+
+  let tenho = 0;
+
+  Object.values(dados).forEach(v=>{
+    if(v==='tem' || v==='rep'){
+      tenho++;
+    }
+  });
+
+  const porcentagem = Math.round((tenho/TOTAL)*100);
+
+  document.getElementById('barra').style.width = porcentagem+'%';
+
+  document.getElementById('percentual').innerHTML = `
+    ${tenho} / ${TOTAL} figurinhas (${porcentagem}%)
+  `;
+}
+
+function compartilhar(){
+
+  const nome = nomeInput.value || 'Colecionador';
+
+  let faltam = [];
+  let repetidas = [];
+
+  for(let i=1;i<=TOTAL;i++){
+
+    const status = dados[i];
+
+    if(status==='falta'){
+      faltam.push(i);
+    }
+
+    if(status==='rep'){
+      repetidas.push(i);
+    }
+  }
+
+  const texto = `
+🏆 Álbum Copa 2026
+
+👤 ${nome}
+
+❌ Faltam:\n${faltam.join(', ')}
+
+🔁 Tenho para troca:\n${repetidas.join(', ')}
+  `;
+
+  window.open(
+    'https://wa.me/?text=' + encodeURIComponent(texto),
+    '_blank'
+  );
+}
+
+// BUSCA
+
+document.getElementById('busca')
+.addEventListener('input',criarAlbum);
+
+criarAlbum();
+
+</script>
+
+</body>
+</html>
